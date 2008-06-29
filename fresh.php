@@ -2,28 +2,8 @@
 
 error_reporting(E_ALL ^ E_NOTICE);
 
-define(ROOMLIMIT,400);
-define(XBOUND,95);
-define(YBOUND,95);
-define(ZBOUND,500);
-define(XSCALE,12);
-define(YSCALE,12);
-define(ZSCALE,8);
-define(LOW,6);
-define(THIN,8);
-define(COLLIDE_NORMAL,1);
-define(COLLIDE_LOWEST,2);
-define(COLLIDE_HIGHEST,3);
-
-$mons = array('monster_alien_grunt','monster_alien_slave','monster_headcrab','monster_bullchicken','monster_houndeye','monster_human_grunt','monster_human_assassin','monster_sentry','monster_zombie');
-$mons_fr = array(               10 ,                  30 ,               20 ,                  15 ,               40 ,                  80 ,                     10 ,              5 ,             20 );
-$mons_cl = array(                5 ,                  10 ,               15 ,                   1 ,               20 ,                  20 ,                      8 ,              5 ,             10 ); 
-$mons_w = array(                16 ,                  14 ,               10 ,                  16 ,               10 ,                  14 ,                     12 ,              8 ,             12 );
-$mons_h = array(                15 ,                  10 ,                5 ,                   8 ,                7 ,                  10 ,                     10 ,             10 ,             10 );
-$weap = array('weapon_357','weapon_9mmAR','weapon_9mmhandgun','weapon_crossbow','weapon_egon','weapon_gauss','weapon_hornetgun','weapon_rpg','weapon_shotgun');
-$weap_fr = array(       5 ,            3 ,                10 ,               3 ,           1 ,            2 ,                1 ,          1 ,              4 );
-$ammo = array('ammo_357','ammo_9mmclip','ammo_9mmAR','ammo_crossbow','ammo_gaussclip','ammo_rpgclip','ammo_buckshot','weapon_handgrenade','weapon_satchel','weapon_tripmine','item_healthkit','item_battery');
-$ammo_fr = array(    20 ,           20 ,          4 ,             4 ,              5 ,            2 ,             8 ,                  7 ,              3 ,               4 ,              2 ,            1 );
+include 'config.php';
+include 'local.php';
 
 $f = null;
 $rooms = array();
@@ -33,10 +13,13 @@ $lights = array();
 $blocks = array();
 $items = array();
 
+$algo = 0; //algorithm version
+
 //pick a seed and set the mapname
-$seed = time();
+if( $seed=='random' )
+  $seed = time();
 mt_srand($seed);
-$freshname = 'fresh_0_'.dechex($seed);
+$freshname = "fresh_{$algo}_".dechex($seed);
 
 //make initial room
 new_room(-30,-30,0,30,30,mt_rand(15,30));
@@ -332,23 +315,40 @@ imagedestroy($img);
 
 
 //compile!
-if( !chdir('zhlt') )                                    die("Failed to enter zhlt directory!\n");
-if( !putenv('WADROOT=/home/gameserver/freshmap/zhlt') ) die("Failed to set WADROOT in the environment!\n");
-passthru( "./hlcsg -nowadtextures $freshname", $return );
-if( $return!=0 )                                        die("hlcsg failed!\n");
-passthru( "./hlbsp $freshname", $return );
-if( $return!=0 )                                        die("hlbsp failed!\n");
-passthru( "./hlvis -full $freshname", $return );
-if( $return!=0 )                                        die("hlvis failed!\n");
-passthru( "./hlrad -bounce 2 -chop 128 $freshname", $return );
-if( $return!=0 )                                        die("hlrad failed!\n");
-if( !copy( "$freshname.bsp", "/home/gameserver/hlds_l/valve/maps/$freshname.bsp" ) )
-                                                        die("Failed to move bsp to maps directory!\n");
-if( !copy( "$freshname.bsp", "/var/www/valve/maps/$freshname.bsp" ) )
-                                                        echo "Failed to move bsp to sv_downloadurl directory!\n";
-shell_exec( "rm -f fresh_*" );
-passthru( "screen -r hlserver -X stuff \"changelevel $freshname\n\"", $return );
-if( $return!=0 )                                        die("Failed to changelevel on hlserver!\n");
+if( $do_compile )
+{
+  if( !chdir('zhlt') )
+    die("Failed to enter zhlt directory!\n");
+  if( !putenv("WADROOT=$wadroot") )
+    die("Failed to set WADROOT in the environment!\n");
+  passthru( "./hlcsg -nowadtextures $freshname", $return );
+  if( $return!=0 )
+    die("hlcsg failed!\n");
+  passthru( "./hlbsp $freshname", $return );
+  if( $return!=0 )
+    die("hlbsp failed!\n");
+  passthru( "./hlvis -full $freshname", $return );
+  if( $return!=0 )
+    die("hlvis failed!\n");
+  passthru( "./hlrad -bounce 2 -chop 128 $freshname", $return );
+  if( $return!=0 )
+    die("hlrad failed!\n");
+  if( $gamemapsdir )
+    if( !copy( "$freshname.bsp", "$gamemapsdir/$freshname.bsp" ) )
+      die("Failed to move bsp to maps directory!\n");
+  if( $storemapsdir )
+    if( !copy( "$freshname.bsp", "$storemapsdir/$freshname.bsp" ) )
+      echo "Failed to move bsp to sv_downloadurl directory!\n";
+  foreach($shell_cmds as $cmd)
+    shell_exec( $cmd );
+  if( $serverscreen )
+  {
+    passthru( "screen -r $serverscreen -X stuff \"changelevel $freshname\n\"", $return );
+    if( $return!=0 )
+      die("Failed to changelevel on hlserver!\n");
+  }
+}
+
 
 exit;
 ////////////////////// DONE /////////////////////////
