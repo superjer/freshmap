@@ -1,19 +1,20 @@
-<?
+<?php
 
 // FRESHMAP CONFIG
 
 define(ROOMLIMIT,400);
-define(XBOUND,95);
-define(YBOUND,95);
+define(XBOUND,80);
+define(YBOUND,80);
 define(ZBOUND,500);
-define(XSCALE,12);
-define(YSCALE,12);
+define(XSCALE,16);
+define(YSCALE,16);
 define(ZSCALE,8);
 define(LOW,6);
 define(THIN,8);
 define(COLLIDE_NORMAL,1);
-define(COLLIDE_LOWEST,2);
-define(COLLIDE_HIGHEST,3);
+define(COLLIDE_NOBOUND,2);
+define(COLLIDE_LOWEST,3);
+define(COLLIDE_HIGHEST,4);
 
 $mons = array('monster_alien_grunt','monster_alien_slave','monster_headcrab','monster_bullchicken','monster_houndeye','monster_human_grunt','monster_human_assassin','monster_sentry','monster_zombie');
 $mons_fr = array(               10 ,                  30 ,               20 ,                  15 ,               40 ,                  80 ,                     10 ,              5 ,             20 );
@@ -25,7 +26,8 @@ $weap_fr = array(       5 ,            3 ,                10 ,               3 ,
 $ammo = array('ammo_357','ammo_9mmclip','ammo_9mmAR','ammo_crossbow','ammo_gaussclip','ammo_rpgclip','ammo_buckshot','weapon_handgrenade','weapon_satchel','weapon_tripmine','item_healthkit','item_battery');
 $ammo_fr = array(    20 ,           20 ,          4 ,             4 ,              5 ,            2 ,             8 ,                  7 ,              3 ,               4 ,              2 ,            1 );
 
-$seed = 'random';
+//$seed = 'random';
+$seed = intval(hexdec('48670c8c'));
 
 
 ?>

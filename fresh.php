@@ -140,12 +140,12 @@ while($i<8000) {
    if( $nextcount==0 && count($rooms)>ROOMLIMIT )
     break;
 
-  if(mt_rand(0,8)==0) { //re-index
+  if(mt_rand(0,100)==0) { //re-index
     $winz = 4096;
     foreach($buildable as $n) { if($rooms[$n][z0]<$winz) $winz=$rooms[$n][z0]; }
     if($winz<-ZBOUND+20)
       break;
-    $winz += 2;
+    $winz += 4;
     $newbuildable = array();
     foreach($buildable as $n) {
       if( $rooms[$n][z0]<=$winz )
@@ -197,6 +197,7 @@ for($i=0;$i<count($itemable);$i++) {
   }
 }
 
+
 //add items
 $entcount = 0;
 $itemmax = count($itemable);
@@ -226,6 +227,14 @@ for($i=0;$i<$itemmax;$i++) {
 echo "Items:\n failed b/c height: $heightfail\n failed b/c width: $widthfail\n failed b/c collision: $collidefail\n succeeded: $itemsuccess\n";
 echo "Attempted to make $attempts monsters\n";
 
+
+//build outside of sweetawesome tower
+new_room(-XBOUND-40,-YBOUND-40,$baselevel,-XBOUND   , YBOUND+40,$skylevel,false,true);
+new_room( XBOUND   ,-YBOUND-40,$baselevel, XBOUND+40, YBOUND+40,$skylevel,false,true);
+new_room(-XBOUND   ,-YBOUND-40,$baselevel, XBOUND   ,-YBOUND   ,$skylevel,false,true);
+new_room(-XBOUND   , YBOUND   ,$baselevel, XBOUND   , YBOUND+40,$skylevel,false,true);
+
+
 $f = fopen("./zhlt/$freshname.map",'w');
 writehead();
 
@@ -238,12 +247,21 @@ foreach($rooms as $n=>$r) {
   else if( $r[z0]<$level1 ) { $floortex='TNNL_FLR6B';   $walltex='CRETE2_WALL03'; }
   else if( $r[z0]<$level2 ) { $floortex='CRETE2_FLR02'; $walltex='BRICKERS';      }
   else                      { $floortex='CRETE2_FLR01'; $walltex='BRICKERS';      }
+  if( $r[y0]<=-YBOUND-39 ) $swalltex='SKY';
+  else                    $swalltex=$walltex;
+  if( $r[y1]>= YBOUND+39 ) $nwalltex='SKY';
+  else                    $nwalltex=$walltex;
+  if( $r[x0]<=-XBOUND-39 ) $wwalltex='SKY';
+  else                    $wwalltex=$walltex;
+  if( $r[x1]>= XBOUND+39 ) $ewalltex='SKY';
+  else                    $ewalltex=$walltex;
+
   sliceandwrite($r[x0]  ,$r[y0]  ,$r[z0]-2,$r[x1]  ,$r[y1]  ,$r[z0]  ,$floortex, 0 ); //floor
   sliceandwrite($r[x0]  ,$r[y0]  ,$r[z1]  ,$r[x1]  ,$r[y1]  ,$r[z1]+2,$ceiltex,  0 ); //ceiling
-  sliceandwrite($r[x0]  ,$r[y0]-2,$r[z0]  ,$r[x1]  ,$r[y0]  ,$r[z1]  ,$walltex,  0 ); //northwall
-  sliceandwrite($r[x0]  ,$r[y1]  ,$r[z0]  ,$r[x1]  ,$r[y1]+2,$r[z1]  ,$walltex,  0 ); //southwall
-  sliceandwrite($r[x0]-2,$r[y0]  ,$r[z0]  ,$r[x0]  ,$r[y1]  ,$r[z1]  ,$walltex,  0 ); //westwall
-  sliceandwrite($r[x1]  ,$r[y0]  ,$r[z0]  ,$r[x1]+2,$r[y1]  ,$r[z1]  ,$walltex,  0 ); //eastwall
+  sliceandwrite($r[x0]  ,$r[y0]-2,$r[z0]  ,$r[x1]  ,$r[y0]  ,$r[z1]  ,$swalltex, 0 ); //southwall
+  sliceandwrite($r[x0]  ,$r[y1]  ,$r[z0]  ,$r[x1]  ,$r[y1]+2,$r[z1]  ,$nwalltex, 0 ); //northwall
+  sliceandwrite($r[x0]-2,$r[y0]  ,$r[z0]  ,$r[x0]  ,$r[y1]  ,$r[z1]  ,$wwalltex, 0 ); //westwall
+  sliceandwrite($r[x1]  ,$r[y0]  ,$r[z0]  ,$r[x1]+2,$r[y1]  ,$r[z1]  ,$ewalltex, 0 ); //eastwall
   echo "$n ";
 }
 echo " done.\n";
@@ -391,10 +409,12 @@ function new_room($_x0,$_y0,$_z0,$_x1,$_y1,$_z1,$parent=false,$force=false) {
 
 function collide($_room,$mode=COLLIDE_NORMAL,$offset=0) {
   global $rooms;
-  if( $_room[x0]<-XBOUND || $_room[x1]>XBOUND ||
-      $_room[y0]<-YBOUND || $_room[y1]>YBOUND ||
-      $_room[z0]<-ZBOUND || $_room[z1]>ZBOUND )
-    return -1; //collides with edge of map
+  if( $mode!=COLLIDE_NOBOUND ) {
+    if( $_room[x0]<-XBOUND || $_room[x1]>XBOUND ||
+        $_room[y0]<-YBOUND || $_room[y1]>YBOUND ||
+        $_room[z0]<-ZBOUND || $_room[z1]>ZBOUND )
+      return -1; //collides with edge of map
+  }
   $winz = $mode==COLLIDE_LOWEST ? 4096 : -4096;
   $win = false;
   $count = count($rooms);
@@ -409,6 +429,7 @@ function collide($_room,$mode=COLLIDE_NORMAL,$offset=0) {
     if($lox<$hix && $loy<$hiy && $loz<$hiz) {
       switch($mode) {
         case COLLIDE_NORMAL:
+        case COLLIDE_NOBOUND:
           return $n;
         case COLLIDE_LOWEST:
           if( $r[z0] < $winz ) { $winz=$r[z0]; $win=$n; }
@@ -427,7 +448,7 @@ function collide($_room,$mode=COLLIDE_NORMAL,$offset=0) {
 function sliceandwrite($x0,$y0,$z0,$x1,$y1,$z1,$tex,$offs) {
   global $rooms;
   $b = block($x0,$y0,$z0,$x1,$y1,$z1);
-  $coll = collide($b,COLLIDE_NORMAL,$offs);
+  $coll = collide($b,COLLIDE_NOBOUND,$offs);
   $offs = $coll+1;
   if( $coll===-1 || $coll===false ) {
     $scaledb = block($x0*XSCALE,$y0*YSCALE,$z0*ZSCALE,$x1*XSCALE,$y1*YSCALE,$z1*ZSCALE);

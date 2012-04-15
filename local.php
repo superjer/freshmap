@@ -1,9 +1,9 @@
-<?
+<?php
 
 
 # do_compile
 # Set to TRUE to do the compile and possible load the map on the game server
-$do_compile = true;
+$do_compile = false;
 
 # wadroot
 # This is the location of the .wad files needed by the compilers
