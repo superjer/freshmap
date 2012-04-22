@@ -1,0 +1,43 @@
+This is a list of custom key-value pairs used in our hammer prefabs.
+
+Key: 	fm_chance
+values:	A number between 0 and 1, which is the chance that this object will exist.
+
+Key:	fm_pangle
+values:	Two numbers, separated by a space, which are the minimum and maximum pitch rotation values, respectively.  These numbers are NOT relative to the default in the prefab.
+
+Key:	fm_rangle
+values:	Two numbers, separated by a space, which are the minimum and maximum roll rotation values, respectively.  These numbers are NOT relative to the default in the prefab.
+
+Key:	fm_yangle
+values:	Two numbers, separated by a space, which are the minimum and maximum yaw rotation values, respectively.  These numbers are NOT relative to the default in the prefab.
+
+Key:	fm_skin
+Values:	A list of Which skins are to be choesn from. (ex: '0 1 3' will tell the generator to pick randomly between skins 0, 1, and 3)
+
+Key:	fm_light
+Values: The lights regular 4 brightness colors will be the average case.  The 4 values for fm_light will be the number the brightness varies by. (ex: 15 15 0 25)
+
+Key:	fm_xoffset
+Values	The distance along the x axis this object caN be placed from it's default in the prefab.
+
+Key:	fm_yoffset
+Values	The distance along the y axis this object caN be placed from it's default in the prefab.
+
+Key:	fm_zoffset
+Values	The distance along the z axis this object caN be placed from it's default in the prefab.
+
+Key:	fm_hate
+Value:	The name of the hategroup(s) this object belongs to.  (see fm_hate below)
+
+
+
+Special entities:
+
+
+fm_hate:
+
+A special info_target named fm_hate is used to define which optional parts of a prefab will conflict with other optional parts.
+Parts are grouped into hategroups which are usually named a, b, c, etc.  Each prefab has it's own namespace for hategroups.
+A custom key on fm_hate defines a hategroup, and that key's value defines which other hategroups that hategroup will conflict with.
+Objects require a new key-value pair that defines which hategroup(s) they are in.
