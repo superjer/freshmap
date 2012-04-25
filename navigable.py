@@ -1,4 +1,9 @@
 from copy import deepcopy
+from random import shuffle
+
+EMPTY = '.'
+SOLID = '@'
+NAV   = '*'
 
 class Point:
 	def __init__(self, z, y, x):
@@ -15,34 +20,85 @@ class Block:
 		self.y1 = y1
 		self.x1 = x1
 
-EMPTY = '.'
-SOLID = '@'
-NAV   = '*'
+class Matrix:
+	def __init__(self, zsize, ysize, xsize):
+		self.size = Point(zsize,ysize,xsize)
+		self.length = zsize*ysize*xsize
+		self.m = self.length * [EMPTY]
 
-# can every navpoint in the matrix be reached from every other?
-def navigable(matrix,navs):
-	# make a copy to trample
-	m = deepcopy(matrix)
+	def __str__(self):
+		s = ''
+		for k in range(self.size.z):
+			for j in range(self.size.y):
+				for i in range(self.size.x):
+					s += self.m[self.offset([k,j,i])] + ' '
+				s += '\n'
+			s += '\n'
+		return s
 
-	found = 0
-	todo = [navs[0]]
+	def __getitem__(self, key):
+		return self.m[self.offset(key)]
 
-	while len(todo):
-		p = todo.pop()
-		z,y,x = p.z,p.y,p.x
-		if m[z][y][x] == SOLID:
-			continue
-		if m[z][y][x] == NAV:
-			found += 1
-			if found == len(navs):
-				return True
-		m[z][y][x] = SOLID # do not traverse here again
+	def __setitem__(self, key, value):
+		self.m[self.offset(key)] = value
 
-		if z > 0             : todo.append(Point(z-1,y  ,x  ))
-		if z < len(m)      -1: todo.append(Point(z+1,y  ,x  ))
-		if y > 0             : todo.append(Point(z  ,y-1,x  ))
-		if y < len(m[0])   -1: todo.append(Point(z  ,y+1,x  ))
-		if x > 0             : todo.append(Point(z  ,y  ,x-1))
-		if x < len(m[0][0])-1: todo.append(Point(z  ,y  ,x+1))
-	return False
+	def offset(self, key):
+		if key[0] < 0 or key[0] >= self.size.z or key[1] < 0 or key[1] >= self.size.y or key[2] < 0 or key[2] >= self.size.x:
+			raise IndexError()
+		return key[0]*self.size.x*self.size.y + key[1]*self.size.x + key[2]
 
+	# can every navpoint in the matrix be reached from every other?
+	def navigable(self, navs):
+		# make a copy to trample
+		m = deepcopy(self.m)
+
+		found = 0
+		todo = [navs[0]]
+
+		while len(todo):
+			p = todo.pop()
+			z,y,x = p.z,p.y,p.x
+			if m[self.offset([z,y,x])] == SOLID:
+				continue
+			if m[self.offset([z,y,x])] == NAV:
+				found += 1
+				if found == len(navs):
+					return True
+			m[self.offset([z,y,x])] = SOLID # do not traverse here again
+
+			if z > 0            : todo.append(Point(z-1,y  ,x  ))
+			if z < self.size.z-1: todo.append(Point(z+1,y  ,x  ))
+			if y > 0            : todo.append(Point(z  ,y-1,x  ))
+			if y < self.size.y-1: todo.append(Point(z  ,y+1,x  ))
+			if x > 0            : todo.append(Point(z  ,y  ,x-1))
+			if x < self.size.x-1: todo.append(Point(z  ,y  ,x+1))
+		return False
+
+	def fill(self, navs):
+		# get shuffled list of fillable positions
+		fillable = []
+		for k in range(self.size.z):
+			for j in range(self.size.y):
+				for i in range(self.size.x):
+					fillable.append(Point(k,j,i))
+
+		shuffle(fillable)
+
+		# fill as much as possible with solids
+		for p in fillable:
+			z,y,x = p.z,p.y,p.x
+			if not self[[z,y,x]] == EMPTY: continue
+			self[[z,y,x]] = SOLID
+			if not self.navigable(navs): self[[z,y,x]] = EMPTY
+
+	# anywhere than other is empty, make ourself empty as well
+	# this effectively merges open paths
+	def merge(self, other):
+		for k in range(self.size.z):
+			for j in range(self.size.y):
+				for i in range(self.size.x):
+					if other[[k,j,i]] == EMPTY:
+						self[[k,j,i]] = EMPTY
+
+
+# vim: ts=8 sw=8 noet
