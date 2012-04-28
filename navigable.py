@@ -26,21 +26,19 @@ class Matrix:
 		self.length = zsize*ysize*xsize
 		self.m = self.length * [EMPTY]
 
+	def __iter__(self):
+		for i in self.m:
+			yield i
+
 	def __str__(self):
-		s = ''
-		for k in range(self.size.z):
-			for j in range(self.size.y):
-				for i in range(self.size.x):
-					s += self.m[self.offset([k,j,i])] + ' '
-				s += '\n'
-			s += '\n'
-		return s
+		s = [ val + (' ' if ((i+1) % self.size.x) else '\n') for (i,val) in enumerate(self.m) ]
+		return "".join(s)
 
 	def __getitem__(self, key):
-		return self.m[self.offset(key)]
+		return self.m[ self.offset(key) ]
 
 	def __setitem__(self, key, value):
-		self.m[self.offset(key)] = value
+		self.m[ self.offset(key) ] = value
 
 	def offset(self, key):
 		if key[0] < 0 or key[0] >= self.size.z or key[1] < 0 or key[1] >= self.size.y or key[2] < 0 or key[2] >= self.size.x:
@@ -58,13 +56,13 @@ class Matrix:
 		while len(todo):
 			p = todo.pop()
 			z,y,x = p.z,p.y,p.x
-			if m[self.offset([z,y,x])] == SOLID:
+			if m[ self.offset((z,y,x)) ] == SOLID:
 				continue
-			if m[self.offset([z,y,x])] == NAV:
+			if m[ self.offset((z,y,x)) ] == NAV:
 				found += 1
 				if found == len(navs):
 					return True
-			m[self.offset([z,y,x])] = SOLID # do not traverse here again
+			m[ self.offset((z,y,x)) ] = SOLID # do not traverse here again
 
 			if z > 0            : todo.append(Point(z-1,y  ,x  ))
 			if z < self.size.z-1: todo.append(Point(z+1,y  ,x  ))
@@ -76,29 +74,20 @@ class Matrix:
 
 	def fill(self, navs):
 		# get shuffled list of fillable positions
-		fillable = []
-		for k in range(self.size.z):
-			for j in range(self.size.y):
-				for i in range(self.size.x):
-					fillable.append(Point(k,j,i))
-
+		fillable = [ Point(k,j,i) for k in range(self.size.z) for j in range(self.size.y) for i in range(self.size.x) ]
 		shuffle(fillable)
 
 		# fill as much as possible with solids
 		for p in fillable:
 			z,y,x = p.z,p.y,p.x
-			if not self[[z,y,x]] == EMPTY: continue
-			self[[z,y,x]] = SOLID
-			if not self.navigable(navs): self[[z,y,x]] = EMPTY
+			if not self[z,y,x] == EMPTY: continue
+			self[z,y,x] = SOLID
+			if not self.navigable(navs): self[z,y,x] = EMPTY
 
-	# anywhere than other is empty, make ourself empty as well
+	# anywhere that other is empty, make ourself empty as well
 	# this effectively merges open paths
 	def merge(self, other):
-		for k in range(self.size.z):
-			for j in range(self.size.y):
-				for i in range(self.size.x):
-					if other[[k,j,i]] == EMPTY:
-						self[[k,j,i]] = EMPTY
+		self.m[:] = [ EMPTY if other.m[i] == EMPTY else self.m[i] for i in range(self.length) ]
 
 
 # vim: ts=8 sw=8 noet
