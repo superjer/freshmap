@@ -146,5 +146,88 @@ cordons
 		self.f.write(data)
 		self.f.close()
 
+	def fog_controller(self,z,y,x):
+		data = """entity
+{
+	"id" "%d"
+	"classname" "env_fog_controller"
+	"angles" "0 0 0"
+	"farz" "2200"
+	"fogblend" "0"
+	"fogcolor" "35 43 50"
+	"fogcolor2" "255 255 255"
+	"fogdir" "1 0 0"
+	"fogenable" "1"
+	"fogend" "2200"
+	"foglerptime" "5"
+	"fogmaxdensity" "1"
+	"fogstart" "0"
+	"HDRColorScale" "1"
+	"heightFogDensity" "0.0"
+	"heightFogMaxDensity" "1.0"
+	"heightFogStart" "0.0"
+	"maxcpulevel" "0"
+	"maxdxlevel" "0"
+	"maxgpulevel" "0"
+	"mincpulevel" "0"
+	"mindxlevel" "0"
+	"mingpulevel" "0"
+	"spawnflags" "1"
+	"targetname" "AutoInstance1-fog_master"
+	"use_angles" "0"
+	"origin" "%d %d %d"
+}
+"""
+		self.f.write(data % (self.num,x,y,z))
+		self.num += 1
+
+	def light_environment(self,z,y,x):
+		data = """
+entity
+{
+	"id" "%d"
+	"classname" "light_environment"
+	"_ambient" "235 236 183 20"
+	"_ambientHDR" "235 236 183 20"
+	"_AmbientScaleHDR" "0.7"
+	"_light" "255 255 255 200"
+	"_lightHDR" "-1 -1 -1 1"
+	"_lightscaleHDR" "0.7"
+	"angles" "-60 236 0"
+	"pitch" "-19"
+	"SunSpreadAngle" "5"
+	"origin" "%d %d %d"
+}
+"""
+		self.f.write(data % (self.num,x,y,z))
+		self.num += 1
+
+	def info_survivor_position(self,z,y,x):
+		data = """
+entity
+{
+	"id" "%d"
+	"classname" "info_survivor_position"
+	"angles" "0 0 0"
+	"Order" "1"
+	"origin" "%d %d %d"
+}
+"""
+		self.f.write(data % (self.num,x,y,z))
+		self.num += 1
+
+	def info_player_start(self,z,y,x):
+		data = """
+entity
+{
+	"id" "%d"
+	"classname" "info_player_start"
+	"angles" "0 0 0"
+	"Order" "1"
+	"origin" "%d %d %d"
+}
+"""
+		self.f.write(data % (self.num,x,y,z))
+		self.num += 1
 
 # vim: ts=8 sw=8 noet

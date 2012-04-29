@@ -31,18 +31,24 @@ class Displacement:
 		self.y = 0
 		self.x = 0
 
+class Cell:
+	def __init__(self, char):
+		self.c = char
+		self.sub = None
+
 class Matrix:
 	def __init__(self, zsize, ysize, xsize):
 		self.size = Point(zsize,ysize,xsize)
 		self.length = zsize*ysize*xsize
-		self.m = self.length * [EMPTY]
+		self.m = [Cell('.') for i in range(self.length)]
+		self.navs = []
 
 	def __iter__(self):
 		for i in self.m:
 			yield i
 
 	def __str__(self):
-		s = [ val + (' ' if ((i+1) % self.size.x) else '\n') for (i,val) in enumerate(self.m) ]
+		s = [ cell.c + (' ' if ((i+1) % self.size.x) else '\n') for (i,cell) in enumerate(self.m) ]
 		return "".join(s)
 
 	def __getitem__(self, key):
@@ -67,13 +73,13 @@ class Matrix:
 		while len(todo):
 			p = todo.pop()
 			z,y,x = p.z,p.y,p.x
-			if m[ self.offset((z,y,x)) ] == SOLID:
+			if m[ self.offset((z,y,x)) ].c == SOLID:
 				continue
-			if m[ self.offset((z,y,x)) ] == NAV:
+			if m[ self.offset((z,y,x)) ].c == NAV:
 				found += 1
 				if found == len(navs):
 					return True
-			m[ self.offset((z,y,x)) ] = SOLID # do not traverse here again
+			m[ self.offset((z,y,x)) ].c = SOLID # do not traverse here again
 
 			if z > 0            : todo.append(Point(z-1,y  ,x  ))
 			if z < self.size.z-1: todo.append(Point(z+1,y  ,x  ))
@@ -91,14 +97,15 @@ class Matrix:
 		# fill as much as possible with solids
 		for p in fillable:
 			z,y,x = p.z,p.y,p.x
-			if not self[z,y,x] == EMPTY: continue
-			self[z,y,x] = SOLID
-			if not self.navigable(navs): self[z,y,x] = EMPTY
+			if not self[z,y,x].c == EMPTY: continue
+			self[z,y,x].c = SOLID
+			if not self.navigable(navs): self[z,y,x].c = EMPTY
 
 	# anywhere that other is empty, make ourself empty as well
 	# this effectively merges open paths
 	def merge(self, other):
-		self.m[:] = [ EMPTY if other.m[i] == EMPTY else self.m[i] for i in range(self.length) ]
-
+		for i in range(self.length):
+			if other.m[i].c == EMPTY:
+				self.m[i].c = EMPTY
 
 # vim: ts=8 sw=8 noet

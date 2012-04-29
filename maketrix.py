@@ -22,8 +22,8 @@ def maketrix( size, extranavs=0, blockchance=0, min_multipaths=0, max_multipaths
 		if i==0: y = 0
 		if i==1: y = matrix.size.y-1
 
-		if matrix[z,y,x] == EMPTY:
-			matrix[z,y,x] = NAV
+		if matrix[z,y,x].c == EMPTY:
+			matrix[z,y,x].c = NAV
 			navs.append( Point(z,y,x) )
 
 	# make a block of navpoints somewhere
@@ -34,8 +34,8 @@ def maketrix( size, extranavs=0, blockchance=0, min_multipaths=0, max_multipaths
 		h = randint(2,5)
 		for j in range(x,x+w):
 			for i in range(y,y+h):
-				if matrix[0,j,i] == EMPTY:
-					matrix[0,j,i] = NAV
+				if matrix[0,j,i].c == EMPTY:
+					matrix[0,j,i].c = NAV
 					navs.append( Point(0,j,i) )
 
 	matrix.fill(navs)
@@ -55,6 +55,7 @@ def maketrix( size, extranavs=0, blockchance=0, min_multipaths=0, max_multipaths
 	print 'Final matrix:'
 	print matrix
 
+	matrix.navs = navs
 	return matrix
 
 # vim: ts=8 sw=8 noet
