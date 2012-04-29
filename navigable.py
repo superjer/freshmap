@@ -20,6 +20,16 @@ class Block:
 		self.y1 = y1
 		self.x1 = x1
 
+class Displacement:
+	def __init__(self, power):
+		self.sidenum = 0
+		self.power   = power
+		self.nverts  = pow(2,power)+1
+		self.dists   = self.nverts * self.nverts * [0]
+		self.z = 0
+		self.y = 0
+		self.x = 0
+
 class Matrix:
 	def __init__(self, zsize, ysize, xsize):
 		self.size = Point(zsize,ysize,xsize)
