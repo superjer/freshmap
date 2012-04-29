@@ -33,6 +33,16 @@ def maketerrain(ydivs, xdivs, size):
 				matrix[0,j,i] = randint(-var,var) + avg
 		step /= 2
 
+	# tweak the random nonsense into something believable
+	for j in range(0,ymax):
+		for i in range(0,xmax):
+			val = matrix[0,j,i] - 100
+			if val < 24:               val = 24 - (24-val)/10
+			if val < 0:                val = 0
+			if val > 16 and val <= 20: val = 16
+			if val > 20 and val <= 24: val = 24
+			matrix[0,j,i] = val
+
 	return matrix
 
 # vim: ts=8 sw=8 noet

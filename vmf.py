@@ -1,3 +1,5 @@
+from random import randint
+
 # boilerplate at top of file
 class Vmf:
 	def __init__(self, filename):
@@ -114,7 +116,16 @@ viewsettings
 			self.f.write(' '.join( [str(x) for x in dis.dists[n*i:n*(i+1)]] ))
 			self.f.write('"\n')
 
-		#close distances, close dispinfo
+		#close distances, open alphas
+		self.f.write("\t\t\t\t}\n\t\t\t\talphas\n\t\t\t\t{\n")
+
+		#output alphas
+		for i in range(n):
+			self.f.write('\t\t\t\t\t"row%d" "' % i)
+			self.f.write(' '.join( [str(x) for x in dis.alphas[n*i:n*(i+1)]] ))
+			self.f.write('"\n')
+
+		#close alphas, close dispinfo
 		self.f.write("\t\t\t\t}\n\t\t\t}\n")
 
 	# end of any entity or the worldspawn

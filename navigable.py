@@ -26,6 +26,7 @@ class Displacement:
 		self.power   = power
 		self.nverts  = pow(2,power)+1
 		self.dists   = self.nverts * self.nverts * [0]
+		self.alphas  = self.nverts * self.nverts * [0]
 		self.z = 0
 		self.y = 0
 		self.x = 0
