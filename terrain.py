@@ -11,7 +11,7 @@ def maketerrain(ydivs, xdivs, size):
 	chaos = randint(-200,130)
 	bias = randint(-150,0)
 
-	print "y,xmax:",ymax,xmax
+	print "y,x max:",ymax,xmax,"chaos:",chaos,"bias:",bias
 
 	for j in range(ydivs+1):
 		for i in range(xdivs+1):

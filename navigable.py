@@ -27,9 +27,6 @@ class Displacement:
 		self.nverts  = pow(2,power)+1
 		self.dists   = self.nverts * self.nverts * [0]
 		self.alphas  = self.nverts * self.nverts * [0]
-		self.z = 0
-		self.y = 0
-		self.x = 0
 
 class Cell:
 	def __init__(self, char):
@@ -42,6 +39,8 @@ class Matrix:
 		self.length = zsize*ysize*xsize
 		self.m = [Cell('.') for i in range(self.length)]
 		self.navs = []
+		self.start = None
+		self.end = None
 
 	def __iter__(self):
 		for i in self.m:
@@ -58,7 +57,14 @@ class Matrix:
 		self.m[ self.offset(key) ] = value
 
 	def offset(self, key):
-		if key[0] < 0 or key[0] >= self.size.z or key[1] < 0 or key[1] >= self.size.y or key[2] < 0 or key[2] >= self.size.x:
+		if key[0] < 0 or key[0] >= self.size.z:
+			print "z",key[0],"out of range",self.size.z
+			raise IndexError()
+		if key[1] < 0 or key[1] >= self.size.y:
+			print "y",key[1],"out of range",self.size.y
+			raise IndexError()
+		if key[2] < 0 or key[2] >= self.size.x:
+			print "x",key[2],"out of range",self.size.x
 			raise IndexError()
 		return key[0]*self.size.x*self.size.y + key[1]*self.size.x + key[2]
 
@@ -105,7 +111,7 @@ class Matrix:
 	# this effectively merges open paths
 	def merge(self, other):
 		for i in range(self.length):
-			if other.m[i].c == EMPTY:
+			if other.m[i].c == EMPTY and self.m[i].c == SOLID:
 				self.m[i].c = EMPTY
 
 # vim: ts=8 sw=8 noet

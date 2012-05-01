@@ -79,14 +79,14 @@ viewsettings
 			                     tex,  ux,uy,uz, uh, us,  vx,vy,vz, vh, vs,  rot))
 
 			if( displacement and displacement.sidenum==sidenum ):
-				self.displace(displacement)
+				self.displace(displacement,ax,cy,cz)
 
 			self.f.write("		}\n")
 			self.num += 1
 		self.f.write('\t}\n')
 
 	# output displacement information
-	def displace(self,dis):
+	def displace(self,dis,startx,starty,startz):
 		n = dis.nverts
 
 		data = """			dispinfo
@@ -99,7 +99,7 @@ viewsettings
 				normals
 				{
 """
-		self.f.write(data % (dis.power, dis.x,dis.y,dis.z))
+		self.f.write(data % (dis.power, startx,starty,startz))
 
 		#output normals
 		for i in range(n):
