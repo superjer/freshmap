@@ -1,5 +1,8 @@
 from random import randint
 
+from point import *
+from tex import *
+
 # boilerplate at top of file
 class Vmf:
 	# template for outputting a "side"
@@ -94,6 +97,31 @@ viewsettings
 			self.f.write(self.side_end)
 		self.end_solid()
 
+	# output a solid pyramid
+	# base should be a list of Point()s
+	def pyramid(self, base, height, basetex, facetex):
+		self.solid()
+
+		a,b,c,d = base
+		center = (a+b+c+d) * 0.25
+		hvec = crossproduct(b-a,d-a)
+		normalize(hvec)
+		t = hvec * height + center # t is pyramid tip
+		ls = [[a, b, c, basetex],
+		      [t, b, a, facetex],
+		      [t, c, b, facetex],
+		      [t, d, c, facetex],
+		      [t, a, d, facetex]]
+
+		for a,b,c,tex in ls:
+			plane = (a.x,a.y,a.z, b.x,b.y,b.z, c.x,c.y,c.z, tex)
+			side = (self.num,) + plane + texfit(a,b,c,tex) + (0,)
+			self.num += 1
+			self.f.write( self.side_tpl % side )
+			self.f.write( self.side_end )
+
+		self.end_solid()
+
 	# output displacement information
 	def displace(self,dis,startx,starty,startz):
 		n = dis.nverts
@@ -136,10 +164,6 @@ viewsettings
 
 		#close alphas, close dispinfo
 		self.f.write("\t\t\t\t}\n\t\t\t}\n")
-
-	# output a solid pyramid
-	def pyramid(self, base, height, basetex, facetex):
-		print "Pyramids are NOTIMPL"
 
 	# end of any entity or the worldspawn
 	def end_ent(self):

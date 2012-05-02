@@ -104,10 +104,10 @@ x = startblock.x0 + 64
 
 # output a card
 card_quad = [
-	Point( z+100, y+ 64, x+ 64 ),
-	Point( z+100, y+144, x+109 ),
-	Point( z+220, y+144, x+109 ),
-	Point( z+220, y+ 64, x+ 64 ),
+	Point( z     , y+ 64, x+ 64 ),
+	Point( z     , y+564, x+200 ),
+	Point( z+1000, y+564, x+200 ),
+	Point( z+1000, y+ 64, x+ 64 ),
 ]
 vmf.pyramid( card_quad, 20, "NATURE/SWAMP_TREES_CARD01", "TOOLS/TOOLSNODRAW" )
 
