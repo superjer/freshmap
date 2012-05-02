@@ -4,6 +4,7 @@ from random import randint
 from copy import deepcopy
 from itertools import product
 
+from point     import *
 from maketrix  import *
 from terrain   import *
 from navigable import *
@@ -97,11 +98,21 @@ for square in squares:
 		b.z1 = 148
 		vmf.block( b, "LIQUIDS/WATER_SWAMP_M1" )
 
-vmf.end_ent()
-
 z = startblock.z0 + Z*2
 y = startblock.y0 + 64
 x = startblock.x0 + 64
+
+# output a card
+card_quad = [
+	Point( z+100, y+ 64, x+ 64 ),
+	Point( z+100, y+144, x+109 ),
+	Point( z+220, y+144, x+109 ),
+	Point( z+220, y+ 64, x+ 64 ),
+]
+vmf.pyramid( card_quad, 20, "NATURE/SWAMP_TREES_CARD01", "TOOLS/TOOLSNODRAW" )
+
+# end worldspawn
+vmf.end_ent()
 
 vmf.fog_controller        (z   ,y    ,x    )
 vmf.light_environment     (z-16,y    ,x    )

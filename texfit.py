@@ -3,19 +3,7 @@
 import math
 from sys import argv
 
-from navigable import *
-
-def magnitude(p):
-	return math.sqrt( p.x*p.x + p.y*p.y + p.z*p.z )
-
-def normalize(p,mag=None):
-	if not mag: mag = magnitude(p)
-	p.x /= mag
-	p.y /= mag
-	p.z /= mag
-
-def dotproduct(a,b):
-	return a.x*b.x + a.y*b.y + a.z*b.z
+from point import *
 
 def aligntex( x0, y0, z0,  x1, y1, z1,  x2, y2, z2,  texw=512, texh=512 ):
 	a = Point( z0, y0, x0 )

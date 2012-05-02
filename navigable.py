@@ -1,15 +1,11 @@
 from copy import deepcopy
 from random import shuffle
 
+from point import *
+
 EMPTY = '.'
 SOLID = '@'
 NAV   = '*'
-
-class Point:
-	def __init__(self, z, y, x):
-		self.z = z
-		self.y = y
-		self.x = x
 
 class Block:
 	def __init__(self, z0, y0, x0, z1, y1, x1):

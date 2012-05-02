@@ -2,6 +2,20 @@ from random import randint
 
 # boilerplate at top of file
 class Vmf:
+	# template for outputting a "side"
+	side_tpl = """\t\tside
+		{
+			"id" "%d"
+			"plane" "(%f %f %f) (%f %f %f) (%f %f %f)"
+			"material" "%s"
+			"uaxis" "[%f %f %f %f] %f"
+			"vaxis" "[%f %f %f %f] %f"
+			"rotation" "%f"
+			"lightmapscale" "16"
+			"smoothing_groups" "0"
+"""
+	side_end = "\t\t}\n"
+
 	def __init__(self, filename):
 		self.num = 1
 		self.f = open(filename, 'w')
@@ -43,47 +57,42 @@ viewsettings
 		self.f.write(data % self.num)
 		self.num += 1
 
-	# write a solid axis-aligned block in an entity or the worldspawn
-	def block(self, block, tex, displacement=None):
+	# start outputting a solid
+	def solid(self):
 		data = '\tsolid\n\t{\n\t\t"id" "%d"\n'
 		self.f.write(data % self.num)
 		self.num += 1
 
+	def end_solid(self):
+		self.f.write('\t}\n')
+
+	# write a solid axis-aligned block in an entity or the worldspawn
+	def block(self, block, tex, displacement=None):
+		self.solid()
+
 		x0,x1,y0,y1,z0,z1 = block.x0,block.x1,block.y0,block.y1,block.z0,block.z1 
 
-		#      point a                        uaxis            vaxis              rotation
-		#      |         point b              |      ushift    |        vshift    |
-		#      |         |         point c    |      |  uscale |        |  vscale |
-		#      |         |         |          |      |  |      |        |  |      |
-		ls = [[x0,y1,z1, x1,y1,z1, x1,y0,z1,  1,0,0, 0, 0.25,  0,-1, 0, 0, 0.25,  0],
-		      [x0,y0,z0, x1,y0,z0, x1,y1,z0,  1,0,0, 0, 0.25,  0,-1, 0, 0, 0.25,  0],
-		      [x0,y1,z1, x0,y0,z1, x0,y0,z0,  0,1,0, 0, 0.25,  0, 0,-1, 0, 0.25,  0],
-		      [x1,y1,z0, x1,y0,z0, x1,y0,z1,  0,1,0, 0, 0.25,  0, 0,-1, 0, 0.25,  0],
-		      [x1,y1,z1, x0,y1,z1, x0,y1,z0,  1,0,0, 0, 0.25,  0, 0,-1, 0, 0.25,  0],
-		      [x1,y0,z0, x0,y0,z0, x0,y0,z1,  1,0,0, 0, 0.25,  0, 0,-1, 0, 0.25,  0]]
+		#      point a                              uaxis            vaxis              rotation
+		#      |         point b                    |      ushift    |        vshift    |
+		#      |         |         point c          |      |  uscale |        |  vscale |
+		#      |         |         |                |      |  |      |        |  |      |
+		ls = [[x0,y1,z1, x1,y1,z1, x1,y0,z1,  tex,  1,0,0, 0, 0.25,  0,-1, 0, 0, 0.25,  0],
+		      [x0,y0,z0, x1,y0,z0, x1,y1,z0,  tex,  1,0,0, 0, 0.25,  0,-1, 0, 0, 0.25,  0],
+		      [x0,y1,z1, x0,y0,z1, x0,y0,z0,  tex,  0,1,0, 0, 0.25,  0, 0,-1, 0, 0.25,  0],
+		      [x1,y1,z0, x1,y0,z0, x1,y0,z1,  tex,  0,1,0, 0, 0.25,  0, 0,-1, 0, 0.25,  0],
+		      [x1,y1,z1, x0,y1,z1, x0,y1,z0,  tex,  1,0,0, 0, 0.25,  0, 0,-1, 0, 0.25,  0],
+		      [x1,y0,z0, x0,y0,z0, x0,y0,z1,  tex,  1,0,0, 0, 0.25,  0, 0,-1, 0, 0.25,  0]]
 
 		for (sidenum,side) in enumerate(ls):
-			ax,ay,az, bx,by,bz, cx,cy,cz,  ux,uy,uz, uh, us,  vx,vy,vz, vh, vs,  rot = side
-			data = """		side
-		{
-			"id" "%d"
-			"plane" "(%f %f %f) (%f %f %f) (%f %f %f)"
-			"material" "%s"
-			"uaxis" "[%f %f %f %f] %f"
-			"vaxis" "[%f %f %f %f] %f"
-			"rotation" "%f"
-			"lightmapscale" "16"
-			"smoothing_groups" "0"
-"""
-			self.f.write(data % (self.num, ax,ay,az, bx,by,bz, cx,cy,cz,
-			                     tex,  ux,uy,uz, uh, us,  vx,vy,vz, vh, vs,  rot))
+			side.insert(0,self.num)
+			self.num += 1
+			self.f.write( self.side_tpl % tuple(side) )
 
 			if( displacement and displacement.sidenum==sidenum ):
-				self.displace(displacement,ax,cy,cz)
+				self.displace(displacement,side[1],side[8],side[9])
 
-			self.f.write("		}\n")
-			self.num += 1
-		self.f.write('\t}\n')
+			self.f.write(self.side_end)
+		self.end_solid()
 
 	# output displacement information
 	def displace(self,dis,startx,starty,startz):
@@ -127,6 +136,10 @@ viewsettings
 
 		#close alphas, close dispinfo
 		self.f.write("\t\t\t\t}\n\t\t\t}\n")
+
+	# output a solid pyramid
+	def pyramid(self, base, height, basetex, facetex):
+		print "Pyramids are NOTIMPL"
 
 	# end of any entity or the worldspawn
 	def end_ent(self):
