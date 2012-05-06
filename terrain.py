@@ -8,10 +8,11 @@ def maketerrain(ydivs, xdivs, size):
 	xmax = xdivs*size+1
 	matrix = Matrix(1, ymax, xmax)
 	var = 256
-	chaos = randint(-200,130)
-	bias = randint(-150,0)
+	chaos = randint(-100,130)
+	bias = randint(-100,0)
 
-	print "y,x max:",ymax,xmax,"chaos:",chaos,"bias:",bias
+	print "Making terrain"
+	print "divs:",xdivs,ydivs,"max:",ymax,xmax,"chaos:",chaos,"bias:",bias
 
 	for j in range(ydivs+1):
 		for i in range(xdivs+1):
@@ -24,6 +25,8 @@ def maketerrain(ydivs, xdivs, size):
 		offs = step/2
 		#edges
 		var /= 2
+		print "step:",step,"offset:",offs,"variance:",var
+
 		for j in range(offs,ymax,step):
 			for i in range(0,xmax,step):
 				avg = matrix[0,j-offs,i] + matrix[0,j+offs,i]
@@ -57,6 +60,7 @@ def maketerrain(ydivs, xdivs, size):
 		#smoothing_spots.append(temp)
 
 	for k in range(0,5):
+		print "Smooth pass",k
 		smoother = deepcopy(matrix)
 		for j,i in product(range(1,ymax-1),range(1,xmax-1)):
 			allowed_passes = []
@@ -69,6 +73,7 @@ def maketerrain(ydivs, xdivs, size):
 		matrix = smoother
 
 	# flatten the lower bits and stretch away from water
+	print "Water fix"
 	for j,i in product(range(0,ymax),range(0,xmax)):
 		val = matrix[0,j,i] - 100
 		if val < 24:               val = 24 - (24-val)/10

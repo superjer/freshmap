@@ -9,7 +9,7 @@ from terrain   import *
 from navigable import *
 from vmf       import *
 
-seed(12)
+seed(13)
 
 XMAIN = randint(4,6)
 YMAIN = 10-XMAIN
@@ -31,11 +31,9 @@ for k,j,i in product(range(matrix.size.z),range(matrix.size.y),range(matrix.size
 		extranavs = randint(0,3),
 		blockchance = 10,
 		min_multipaths = 0,
-		max_multipaths = 5,
+		max_multipaths = 3,
 		parent = matrix,
 		pspot = Point(k,j,i) )
-
-hmap = maketerrain(XMAIN,YMAIN,DIVSIZE*16)
 
 # write vmf file
 vmf = Vmf("mapsrc/nasty.vmf")
@@ -58,7 +56,7 @@ class Square:
 		self.is_start = False
 		self.is_end = False
 
-maxcorn = Point(   0,   0,   0)
+maxcorn = Point(1,0,0)
 squares = []
 
 for k,j,i in product(range(matrix.size.z),range(matrix.size.y),range(matrix.size.x)):
@@ -66,18 +64,20 @@ for k,j,i in product(range(matrix.size.z),range(matrix.size.y),range(matrix.size
 	sub = matrix[k,j,i].sub
 	for w,v,u in product(range(sub.size.z),range(sub.size.y),range(sub.size.x)):
 		if sub[w,v,u].c == '@': continue
-		square = Square(k*DIVSIZE+w, j*DIVSIZE+v, i*DIVSIZE+u)
+		square = Square(k*DIVSIZE+w, j*DIVSIZE+v+3, i*DIVSIZE+u+3) # +3's are for buffering!
 		if (w,v,u) == sub.start: square.is_start = True
 		if (w,v,u) == sub.end  : square.is_end   = True
-		maxcorn.z = max(maxcorn.z,square.z)
 		maxcorn.y = max(maxcorn.y,square.y)
 		maxcorn.x = max(maxcorn.x,square.x)
 		squares.append(square)
 
-biggrid = [ [ [ None for x in range(0,maxcorn.x+2) ] for y in range(0,maxcorn.y+2) ] for z in range(0,maxcorn.z+2) ]
-
+# all these +3's are to keep several unused squares around the boundary
+maxcorn += Point(0,3,3)
+biggrid = [ [ [ None for x in range(0,maxcorn.x) ] for y in range(0,maxcorn.y) ] for z in range(0,maxcorn.z) ]
 for square in squares:
 	biggrid[square.z][square.y][square.x] = square
+
+hmap = maketerrain( int(maxcorn.x/4+1), int(maxcorn.y/4+1), 64 )
 
 class Node:
 	def __init__(self,y,x,normal):
@@ -110,19 +110,17 @@ def link(y0,x0,y2,x2,normal):
 	node1.edges += (edge0,edge1)
 	node2.edges += (edge1,)
 
+print "Making edge graph"
 for klev in biggrid:
 	for jlev in klev:
 		for square in jlev:
 			if square is None: continue
 			z,y,x = square.z,square.y,square.x
 			if z != 0 or y>maxcorn.y or x>maxcorn.x: continue
-			if square: print '%2d%2d%2d' % (z,y,x),
-			else:      print '      ',
 			if y==0 or biggrid[z][y-1][x  ] is None: link( (y-CEN  )*Y, (x-CEN  )*X, (y-CEN  )*Y, (x-CEN+1)*X, Point(0, 1, 0) )
 			if x==0 or biggrid[z][y  ][x-1] is None: link( (y-CEN+1)*Y, (x-CEN  )*X, (y-CEN  )*Y, (x-CEN  )*X, Point(0, 0, 1) )
 			if         biggrid[z][y+1][x  ] is None: link( (y-CEN+1)*Y, (x-CEN+1)*X, (y-CEN+1)*Y, (x-CEN  )*X, Point(0,-1, 0) )
 			if         biggrid[z][y  ][x+1] is None: link( (y-CEN  )*Y, (x-CEN+1)*X, (y-CEN+1)*Y, (x-CEN+1)*X, Point(0, 0,-1) )
-		print '\n'
 
 def alphaval(n):
 	return str(randint(128,255)) if n<24 else "0"
@@ -130,6 +128,7 @@ def alphaval(n):
 startblock = None
 endblock = None
 
+print "Writing"
 for square in squares:
 	k,j,i = square.z,square.y,square.x
 	yx_range = [ (y,x) for y,x in product(range(j*DIVSIZE,(j+1)*DIVSIZE+1), range(i*DIVSIZE,(i+1)*DIVSIZE+1)) ]
@@ -152,6 +151,7 @@ for square in squares:
 
 # push some nodes around
 for node in nodes.values():
+	if not node.normal.x and not node.normal.y: continue # can't normalize zero vector
 	normalize(node.normal)
 	node.normal += Point(0,random()*0.2,random()*0.2)
 	normalize(node.normal)
