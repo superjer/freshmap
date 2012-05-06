@@ -150,6 +150,7 @@ for square in squares:
 		vmf.block( b, "LIQUIDS/WATER_SWAMP_M1" )
 
 # push some nodes around
+print "Randomizing nodes a bit"
 for node in nodes.values():
 	if not node.normal.x and not node.normal.y: continue # can't normalize zero vector
 	normalize(node.normal)
@@ -159,8 +160,13 @@ for node in nodes.values():
 	node.y += dist*node.normal.y
 	node.x += dist*node.normal.x
 
+REPEL_MIN = 0.99
+REPEL_RAND = (1.0-REPEL_MIN) * 2.0
+
 # smooth the nodes
-for i in range(4):
+print "Smoothing nodes"
+for i in range(6,2,-1):
+	print "Smoothing nodes pass",i
 	for node in nodes.values():
 		avg_denum = 1
 		node.newy = node.y
@@ -172,6 +178,16 @@ for i in range(4):
 				node.newy += neigh.y
 				node.newx += neigh.x
 				avg_denum += 1
+		# nearby nodes repel
+		for other in nodes.values():
+			if other is node: continue
+			othervec = Point(0,other.y,other.x) - Point(0,node.y,node.x)
+			othermag = magnitude(othervec)
+			too_close = othermag - 50.0 * i
+			if too_close < 0.0:
+				normalize(othervec)
+				node.newy += othervec.y * too_close * (random()*REPEL_RAND + REPEL_MIN)
+				node.newx += othervec.x * too_close * (random()*REPEL_RAND + REPEL_MIN)
 		node.newy /= avg_denum
 		node.newx /= avg_denum
 
@@ -179,7 +195,8 @@ for i in range(4):
 		node.y = node.newy
 		node.x = node.newx
 
-# output a card
+# output a card for each graph edge
+print "Writing"
 for node0,node1 in edges:
 	card_quad = [
 		Point( Z    , node0.y, node0.x ),
