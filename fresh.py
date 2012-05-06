@@ -9,11 +9,10 @@ from terrain   import *
 from navigable import *
 from vmf       import *
 
-seed(6)
+seed(12)
 
 XMAIN = randint(4,6)
 YMAIN = 10-XMAIN
-XMAIN,YMAIN = 3,3
 DIVPOWER = 3
 DIVSIZE = 2**DIVPOWER
 
@@ -84,17 +83,32 @@ class Node:
 	def __init__(self,y,x,normal):
 		self.y = y
 		self.x = x
+		self.newy = 0
+		self.newx = 0
 		self.normal = normal
+		self.edges = []
 nodes = {}
 edges = []
 
 def add_node(y,x,normal):
+	global nodes
 	if (y,x) in nodes: nodes[y,x].normal += normal
 	else:              nodes[y,x] = Node(y,x,normal)
 	return nodes[y,x]
 
-def link(y0,x0,y1,x1,normal):
-	edges.append( (add_node(y0,x0,normal), add_node(y1,x1,normal)) )
+def link(y0,x0,y2,x2,normal):
+	global nodes, edges
+	y1 = (y0+y2)*0.5
+	x1 = (x0+x2)*0.5
+	node0 = add_node(y0,x0,normal)
+	node1 = add_node(y1,x1,normal)
+	node2 = add_node(y2,x2,normal)
+	edge0 = (node0,node1)
+	edge1 = (node1,node2)
+	edges += (edge0,edge1)
+	node0.edges += (edge0,)
+	node1.edges += (edge0,edge1)
+	node2.edges += (edge1,)
 
 for klev in biggrid:
 	for jlev in klev:
@@ -144,6 +158,26 @@ for node in nodes.values():
 	dist = -384.0 + random() * 576.0
 	node.y += dist*node.normal.y
 	node.x += dist*node.normal.x
+
+# smooth the nodes
+for i in range(4):
+	for node in nodes.values():
+		avg_denum = 1
+		node.newy = node.y
+		node.newx = node.x
+		# find neighbor nodes
+		for edge in node.edges:
+			for neigh in edge:
+				if neigh is node: continue
+				node.newy += neigh.y
+				node.newx += neigh.x
+				avg_denum += 1
+		node.newy /= avg_denum
+		node.newx /= avg_denum
+
+	for node in nodes.values():
+		node.y = node.newy
+		node.x = node.newx
 
 # output a card
 for node0,node1 in edges:

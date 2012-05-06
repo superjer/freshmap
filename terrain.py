@@ -7,7 +7,7 @@ def maketerrain(ydivs, xdivs, size):
 	ymax = ydivs*size+1
 	xmax = xdivs*size+1
 	matrix = Matrix(1, ymax, xmax)
-	var = 512
+	var = 256
 	chaos = randint(-200,130)
 	bias = randint(-150,0)
 
