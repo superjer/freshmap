@@ -126,7 +126,7 @@ for square in squares:
 		startblock = deepcopy(b)
 	if square.is_end:
 		endblock = deepcopy(b)
-	vmf.block( b, "NATURE/BLEND_GRASS_MUD_01", disp )
+	vmf.block( b, "NATURE/BLENDSWAMPMUDROOTS01", disp )
 	vmf.block( b, "TOOLS/TOOLSNODRAW" )
 	b.z0 = (k+10)*Z
 	b.z1 = (k+11)*Z
@@ -141,20 +141,20 @@ for node in nodes.values():
 	normalize(node.normal)
 	node.normal += Point(0,random()*0.2,random()*0.2)
 	normalize(node.normal)
-	dist = 16.0 + random() * 192.0
+	dist = -384.0 + random() * 576.0
 	node.y += dist*node.normal.y
 	node.x += dist*node.normal.x
 
 # output a card
 for node0,node1 in edges:
 	card_quad = [
-		Point( Z     , node0.y, node0.x ),
-		Point( Z     , node1.y, node1.x ),
-		Point( Z+1000, node1.y, node1.x ),
-		Point( Z+1000, node0.y, node0.x ),
+		Point( Z    , node0.y, node0.x ),
+		Point( Z    , node1.y, node1.x ),
+		Point( Z+512, node1.y, node1.x ),
+		Point( Z+512, node0.y, node0.x ),
 	]
 	tex = "NATURE/SWAMP_TREES_CARD02" + ("a" if randint(0,1) else "")
-	vmf.pyramid( card_quad, 20, tex, "TOOLS/TOOLSNODRAW" )
+	vmf.pyramid( card_quad, 80, tex, "TOOLS/TOOLSNODRAW" )
 
 z = startblock.z0 + Z*2
 y = startblock.y0 + Y/2

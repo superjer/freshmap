@@ -28,15 +28,18 @@ def maketerrain(ydivs, xdivs, size):
 			for i in range(0,xmax,step):
 				avg = matrix[0,j-offs,i] + matrix[0,j+offs,i]
 				matrix[0,j,i] = randint(-var,var) + avg / 2
+				if step>32 and randint(0,1024)<step: matrix[0,j,i] = randint(0,var) + bias
 		for j in range(0,ymax,step):
 			for i in range(offs,xmax,step):
 				avg = matrix[0,j,i-offs] + matrix[0,j,i+offs]
 				matrix[0,j,i] = randint(-var,var) + avg / 2
+				if step>32 and randint(0,1024)<step: matrix[0,j,i] = randint(0,var) + bias
 		#middles
 		for j in range(offs,ymax,step):
 			for i in range(offs,xmax,step):
 				avg = matrix[0,j-offs,i] + matrix[0,j,i-offs] + matrix[0,j+offs,i] + matrix[0,j,i+offs]
 				matrix[0,j,i] = randint(-var,var) + avg / 4
+				if step>32 and randint(0,1024)<step: matrix[0,j,i] = randint(0,var) + bias
 		step /= 2
 
 	# smoothing passes
