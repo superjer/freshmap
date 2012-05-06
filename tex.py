@@ -3,8 +3,10 @@ import math
 from point import *
 
 texsizes = {
-	"NATURE/SWAMP_TREES_CARD01": (1024,1024),
-	"TOOLS/TOOLSNODRAW"        : (  64,  64),
+	"NATURE/SWAMP_TREES_CARD01" : (1024,1024),
+	"NATURE/SWAMP_TREES_CARD02" : (1024,1024),
+	"NATURE/SWAMP_TREES_CARD02a": (1024,1024),
+	"TOOLS/TOOLSNODRAW"         : (  64,  64),
 }
 
 # figure out the texture axes, shifts, and scales to "fit" on the polygon

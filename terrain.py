@@ -51,7 +51,7 @@ def maketerrain(ydivs, xdivs, size):
 		                      randint(5,20)         ,
 		                      randint(1,5)          , )
 		print "Smoothing spot:",temp.x,temp.y,temp.radius,temp.passes
-		smoothing_spots.append(temp)
+		#smoothing_spots.append(temp)
 
 	for k in range(0,5):
 		smoother = deepcopy(matrix)

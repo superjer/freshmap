@@ -1,6 +1,5 @@
 #!/usr/bin/python
-import random
-from random import randint
+from random import *
 from copy import deepcopy
 from itertools import product
 
@@ -10,7 +9,7 @@ from terrain   import *
 from navigable import *
 from vmf       import *
 
-random.seed(6)
+seed(6)
 
 XMAIN = randint(4,6)
 YMAIN = 10-XMAIN
@@ -60,17 +59,56 @@ class Square:
 		self.is_start = False
 		self.is_end = False
 
+maxcorn = Point(   0,   0,   0)
 squares = []
 
 for k,j,i in product(range(matrix.size.z),range(matrix.size.y),range(matrix.size.x)):
 	if matrix[k,j,i].c == '@': continue
 	sub = matrix[k,j,i].sub
 	for w,v,u in product(range(sub.size.z),range(sub.size.y),range(sub.size.x)):
-	        if sub[w,v,u].c == '@': continue
+		if sub[w,v,u].c == '@': continue
 		square = Square(k*DIVSIZE+w, j*DIVSIZE+v, i*DIVSIZE+u)
 		if (w,v,u) == sub.start: square.is_start = True
 		if (w,v,u) == sub.end  : square.is_end   = True
+		maxcorn.z = max(maxcorn.z,square.z)
+		maxcorn.y = max(maxcorn.y,square.y)
+		maxcorn.x = max(maxcorn.x,square.x)
 		squares.append(square)
+
+biggrid = [ [ [ None for x in range(0,maxcorn.x+2) ] for y in range(0,maxcorn.y+2) ] for z in range(0,maxcorn.z+2) ]
+
+for square in squares:
+	biggrid[square.z][square.y][square.x] = square
+
+class Node:
+	def __init__(self,y,x,normal):
+		self.y = y
+		self.x = x
+		self.normal = normal
+nodes = {}
+edges = []
+
+def add_node(y,x,normal):
+	if (y,x) in nodes: nodes[y,x].normal += normal
+	else:              nodes[y,x] = Node(y,x,normal)
+	return nodes[y,x]
+
+def link(y0,x0,y1,x1,normal):
+	edges.append( (add_node(y0,x0,normal), add_node(y1,x1,normal)) )
+
+for klev in biggrid:
+	for jlev in klev:
+		for square in jlev:
+			if square is None: continue
+			z,y,x = square.z,square.y,square.x
+			if z != 0 or y>maxcorn.y or x>maxcorn.x: continue
+			if square: print '%2d%2d%2d' % (z,y,x),
+			else:      print '      ',
+			if y==0 or biggrid[z][y-1][x  ] is None: link( (y-CEN  )*Y, (x-CEN  )*X, (y-CEN  )*Y, (x-CEN+1)*X, Point(0, 1, 0) )
+			if x==0 or biggrid[z][y  ][x-1] is None: link( (y-CEN+1)*Y, (x-CEN  )*X, (y-CEN  )*Y, (x-CEN  )*X, Point(0, 0, 1) )
+			if         biggrid[z][y+1][x  ] is None: link( (y-CEN+1)*Y, (x-CEN+1)*X, (y-CEN+1)*Y, (x-CEN  )*X, Point(0,-1, 0) )
+			if         biggrid[z][y  ][x+1] is None: link( (y-CEN  )*Y, (x-CEN+1)*X, (y-CEN+1)*Y, (x-CEN+1)*X, Point(0, 0,-1) )
+		print '\n'
 
 def alphaval(n):
 	return str(randint(128,255)) if n<24 else "0"
@@ -98,29 +136,40 @@ for square in squares:
 		b.z1 = 148
 		vmf.block( b, "LIQUIDS/WATER_SWAMP_M1" )
 
-z = startblock.z0 + Z*2
-y = startblock.y0 + 64
-x = startblock.x0 + 64
+# push some nodes around
+for node in nodes.values():
+	normalize(node.normal)
+	node.normal += Point(0,random()*0.2,random()*0.2)
+	normalize(node.normal)
+	dist = 16.0 + random() * 192.0
+	node.y += dist*node.normal.y
+	node.x += dist*node.normal.x
 
 # output a card
-card_quad = [
-	Point( z     , y+ 64, x+ 64 ),
-	Point( z     , y+564, x+200 ),
-	Point( z+1000, y+564, x+200 ),
-	Point( z+1000, y+ 64, x+ 64 ),
-]
-vmf.pyramid( card_quad, 20, "NATURE/SWAMP_TREES_CARD01", "TOOLS/TOOLSNODRAW" )
+for node0,node1 in edges:
+	card_quad = [
+		Point( Z     , node0.y, node0.x ),
+		Point( Z     , node1.y, node1.x ),
+		Point( Z+1000, node1.y, node1.x ),
+		Point( Z+1000, node0.y, node0.x ),
+	]
+	tex = "NATURE/SWAMP_TREES_CARD02" + ("a" if randint(0,1) else "")
+	vmf.pyramid( card_quad, 20, tex, "TOOLS/TOOLSNODRAW" )
+
+z = startblock.z0 + Z*2
+y = startblock.y0 + Y/2
+x = startblock.x0 + X/2
 
 # end worldspawn
 vmf.end_ent()
 
-vmf.fog_controller        (z   ,y    ,x    )
-vmf.light_environment     (z-16,y    ,x    )
-vmf.info_survivor_position(z-64,y    ,x    )
-vmf.info_survivor_position(z-64,y+128,x    )
-vmf.info_survivor_position(z-64,y    ,x+128)
-vmf.info_survivor_position(z-64,y+128,x+128)
-vmf.info_player_start     (z-64,y+64 ,x+64 )
+vmf.fog_controller        (z+100,y   ,x   )
+vmf.light_environment     (z+120,y   ,x   )
+vmf.info_survivor_position(z-64 ,y-64,x-64)
+vmf.info_survivor_position(z-64 ,y+64,x-64)
+vmf.info_survivor_position(z-64 ,y-64,x+64)
+vmf.info_survivor_position(z-64 ,y+64,x+64)
+vmf.info_player_start     (z-64 ,y   ,x   )
 
 vmf.close()
 
