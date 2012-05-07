@@ -49,12 +49,14 @@ CEN = DIVSIZE*max(XMAIN,YMAIN)/2
 
 # make a list of squares to export
 class Square:
-	def __init__(self,z,y,x):
+	def __init__(self,z,y,x,is_pad=False,is_sky=False):
 		self.z = z
 		self.y = y
 		self.x = x
 		self.is_start = False
 		self.is_end = False
+		self.is_pad = is_pad
+		self.is_sky = is_sky
 
 maxcorn = Point(1,0,0)
 squares = []
@@ -122,6 +124,31 @@ for klev in biggrid:
 			if         biggrid[z][y+1][x  ] is None: link( (y-CEN+1)*Y, (x-CEN+1)*X, (y-CEN+1)*Y, (x-CEN  )*X, Point(0,-1, 0) )
 			if         biggrid[z][y  ][x+1] is None: link( (y-CEN  )*Y, (x-CEN+1)*X, (y-CEN+1)*Y, (x-CEN+1)*X, Point(0, 0,-1) )
 
+#biggrid = [ [ [ None for x in range(0,maxcorn.x) ] for y in range(0,maxcorn.y) ] for z in range(0,maxcorn.z) ]
+print "Adding padding squares"
+for j in range(1,maxcorn.y-1):
+	for i in range(1,maxcorn.x-1):
+		if biggrid[0][j][i] is not None: continue
+		a = biggrid[0][j-1][i  ]
+		b = biggrid[0][j+1][i  ]
+		c = biggrid[0][j  ][i-1]
+		d = biggrid[0][j  ][i+1]
+		if (a and not a.is_pad) or (b and not b.is_pad) or (c and not c.is_pad) or (d and not d.is_pad):
+			biggrid[0][j][i] = square = Square(0,j,i,is_pad=True)
+			squares.append(square)
+
+print "Adding sky squares"
+for j in range(1,maxcorn.y-1):
+	for i in range(1,maxcorn.x-1):
+		if biggrid[0][j][i] is not None: continue
+		a = biggrid[0][j-1][i  ]
+		b = biggrid[0][j+1][i  ]
+		c = biggrid[0][j  ][i-1]
+		d = biggrid[0][j  ][i+1]
+		if (a and not a.is_sky) or (b and not b.is_sky) or (c and not c.is_sky) or (d and not d.is_sky):
+			biggrid[0][j][i] = square = Square(0,j,i,is_pad=True,is_sky=True)
+			squares.append(square)
+
 def alphaval(n):
 	return str(randint(128,255)) if n<24 else "0"
 
@@ -131,10 +158,14 @@ endblock = None
 print "Writing"
 for square in squares:
 	k,j,i = square.z,square.y,square.x
+	b = Block( k*Z, (j-CEN)*Y, (i-CEN)*X, (k+1)*Z, (j+1-CEN)*Y, (i+1-CEN)*X )
+	if square.is_sky:
+		b.z1 = (k+11)*Z
+		vmf.block( b, "TOOLS/TOOLSSKYBOX" )
+		continue
 	yx_range = [ (y,x) for y,x in product(range(j*DIVSIZE,(j+1)*DIVSIZE+1), range(i*DIVSIZE,(i+1)*DIVSIZE+1)) ]
 	disp.dists = [ hmap[0,y,x] for y,x in yx_range ]
 	disp.alphas = [ alphaval(hmap[0,y,x]) for y,x in yx_range ]
-	b = Block( k*Z, (j-CEN)*Y, (i-CEN)*X, (k+1)*Z, (j+1-CEN)*Y, (i+1-CEN)*X )
 	if square.is_start:
 		startblock = deepcopy(b)
 	if square.is_end:
