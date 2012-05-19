@@ -9,7 +9,7 @@ from terrain   import *
 from navigable import *
 from vmf       import *
 
-seed(13)
+seed(16)
 
 XMAIN = randint(4,6)
 YMAIN = 10-XMAIN
@@ -73,8 +73,8 @@ for k,j,i in product(range(matrix.size.z),range(matrix.size.y),range(matrix.size
 		maxcorn.x = max(maxcorn.x,square.x)
 		squares.append(square)
 
-# all these +3's are to keep several unused squares around the boundary
-maxcorn += Point(0,3,3)
+# all these +3's/+4's are to keep several unused squares around the boundary
+maxcorn += Point(0,4,4)
 biggrid = [ [ [ None for x in range(0,maxcorn.x) ] for y in range(0,maxcorn.y) ] for z in range(0,maxcorn.z) ]
 for square in squares:
 	biggrid[square.z][square.y][square.x] = square
@@ -119,10 +119,10 @@ for klev in biggrid:
 			if square is None: continue
 			z,y,x = square.z,square.y,square.x
 			if z != 0 or y>maxcorn.y or x>maxcorn.x: continue
-			if y==0 or biggrid[z][y-1][x  ] is None: link( (y-CEN  )*Y, (x-CEN  )*X, (y-CEN  )*Y, (x-CEN+1)*X, Point(0, 1, 0) )
-			if x==0 or biggrid[z][y  ][x-1] is None: link( (y-CEN+1)*Y, (x-CEN  )*X, (y-CEN  )*Y, (x-CEN  )*X, Point(0, 0, 1) )
-			if         biggrid[z][y+1][x  ] is None: link( (y-CEN+1)*Y, (x-CEN+1)*X, (y-CEN+1)*Y, (x-CEN  )*X, Point(0,-1, 0) )
-			if         biggrid[z][y  ][x+1] is None: link( (y-CEN  )*Y, (x-CEN+1)*X, (y-CEN+1)*Y, (x-CEN+1)*X, Point(0, 0,-1) )
+			if y==0 or biggrid[z][y-1][x  ] is None: link( (y  )*Y, (x  )*X, (y  )*Y, (x+1)*X, Point(0, 1, 0) )
+			if x==0 or biggrid[z][y  ][x-1] is None: link( (y+1)*Y, (x  )*X, (y  )*Y, (x  )*X, Point(0, 0, 1) )
+			if         biggrid[z][y+1][x  ] is None: link( (y+1)*Y, (x+1)*X, (y+1)*Y, (x  )*X, Point(0,-1, 0) )
+			if         biggrid[z][y  ][x+1] is None: link( (y  )*Y, (x+1)*X, (y+1)*Y, (x+1)*X, Point(0, 0,-1) )
 
 #biggrid = [ [ [ None for x in range(0,maxcorn.x) ] for y in range(0,maxcorn.y) ] for z in range(0,maxcorn.z) ]
 print "Adding padding squares"
@@ -158,7 +158,7 @@ endblock = None
 print "Writing"
 for square in squares:
 	k,j,i = square.z,square.y,square.x
-	b = Block( k*Z, (j-CEN)*Y, (i-CEN)*X, (k+1)*Z, (j+1-CEN)*Y, (i+1-CEN)*X )
+	b = Block( k*Z, j*Y, i*X, (k+1)*Z, (j+1)*Y, (i+1)*X )
 	if square.is_sky:
 		b.z1 = (k+11)*Z
 		vmf.block( b, "TOOLS/TOOLSSKYBOX" )
@@ -170,7 +170,7 @@ for square in squares:
 		startblock = deepcopy(b)
 	if square.is_end:
 		endblock = deepcopy(b)
-	vmf.block( b, "NATURE/BLENDSWAMPMUDROOTS01", disp )
+	vmf.block( b, "NATURE/BLENDSWAMPMUDROOTS01_LOWDENSITY", disp, autofit=False )
 	vmf.block( b, "TOOLS/TOOLSNODRAW" )
 	b.z0 = (k+10)*Z
 	b.z1 = (k+11)*Z
@@ -221,29 +221,41 @@ for i in range(6,2,-1):
 				node.newx += othervec.x * too_close * (random()*REPEL_RAND + REPEL_MIN)
 		node.newy /= avg_denum
 		node.newx /= avg_denum
-
 	for node in nodes.values():
 		node.y = node.newy
 		node.x = node.newx
 
+# end worldspawn
+vmf.end_ent()
+
 # output a card for each graph edge
 print "Writing"
+
+card_quads = {}
 for node0,node1 in edges:
-	card_quad = [
-		Point( Z    , node0.y, node0.x ),
-		Point( Z    , node1.y, node1.x ),
-		Point( Z+512, node1.y, node1.x ),
-		Point( Z+512, node0.y, node0.x ),
-	]
-	tex = "NATURE/SWAMP_TREES_CARD02" + ("a" if randint(0,1) else "")
-	vmf.pyramid( card_quad, 80, tex, "TOOLS/TOOLSNODRAW" )
+	grpkey = (int(node0.y/1024),int(node0.x/1024))
+	if not grpkey in card_quads: card_quads[grpkey] = []
+	y0,x0,y1,x1 = int(node0.y),int(node0.x),int(node1.y),int(node1.x)
+	dy = Y/DIVSIZE
+	dx = X/DIVSIZE
+	z0 = lowest( hmap, y0/dy, x0/dx )
+	z1 = lowest( hmap, y1/dy, x1/dx )
+	card_quads[grpkey].append( [
+		Point( z0    , node0.y, node0.x ),
+		Point( z1    , node1.y, node1.x ),
+		Point( z1+512, node1.y, node1.x ),
+		Point( z0+512, node0.y, node0.x ),
+	] )
+for quad_group in card_quads.values():
+	vmf.func_detail()
+	for quad in quad_group:
+		tex = "NATURE/SWAMP_TREES_CARD02" + ("a" if randint(0,1) else "")
+		vmf.pyramid( quad, 80, tex, "TOOLS/TOOLSNODRAW" )
+	vmf.end_ent()
 
 z = startblock.z0 + Z*2
 y = startblock.y0 + Y/2
 x = startblock.x0 + X/2
-
-# end worldspawn
-vmf.end_ent()
 
 vmf.fog_controller        (z+100,y   ,x   )
 vmf.light_environment     (z+120,y   ,x   )

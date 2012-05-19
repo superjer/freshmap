@@ -70,31 +70,43 @@ viewsettings
 		self.f.write('\t}\n')
 
 	# write a solid axis-aligned block in an entity or the worldspawn
-	def block(self, block, tex, displacement=None):
+	def block(self, block, tex, displacement=None, autofit=True):
 		self.solid()
 
-		x0,x1,y0,y1,z0,z1 = block.x0,block.x1,block.y0,block.y1,block.z0,block.z1 
+		a = Point( block.z1, block.y1, block.x0 )
+		b = Point( block.z1, block.y1, block.x1 )
+		c = Point( block.z1, block.y0, block.x1 )
+		d = Point( block.z0, block.y0, block.x0 )
+		e = Point( block.z0, block.y0, block.x1 )
+		f = Point( block.z0, block.y1, block.x1 )
+		g = Point( block.z1, block.y0, block.x0 )
+		h = Point( block.z0, block.y1, block.x0 )
 
-		#      point a                              uaxis            vaxis              rotation
-		#      |         point b                    |      ushift    |        vshift    |
-		#      |         |         point c          |      |  uscale |        |  vscale |
-		#      |         |         |                |      |  |      |        |  |      |
-		ls = [[x0,y1,z1, x1,y1,z1, x1,y0,z1,  tex,  1,0,0, 0, 0.25,  0,-1, 0, 0, 0.25,  0],
-		      [x0,y0,z0, x1,y0,z0, x1,y1,z0,  tex,  1,0,0, 0, 0.25,  0,-1, 0, 0, 0.25,  0],
-		      [x0,y1,z1, x0,y0,z1, x0,y0,z0,  tex,  0,1,0, 0, 0.25,  0, 0,-1, 0, 0.25,  0],
-		      [x1,y1,z0, x1,y0,z0, x1,y0,z1,  tex,  0,1,0, 0, 0.25,  0, 0,-1, 0, 0.25,  0],
-		      [x1,y1,z1, x0,y1,z1, x0,y1,z0,  tex,  1,0,0, 0, 0.25,  0, 0,-1, 0, 0.25,  0],
-		      [x1,y0,z0, x0,y0,z0, x0,y0,z1,  tex,  1,0,0, 0, 0.25,  0, 0,-1, 0, 0.25,  0]]
+		#      point a         uaxis            vaxis              rotation
+		#      |  point b      |      ushift    |        vshift    |
+		#      |  |  point c   |      |  uscale |        |  vscale |
+		#      |  |  |         |      |  |      |        |  |      |
+		ls = [[a, b, c,  tex, (1,0,0, 0, 0.25,  0,-1, 0, 0, 0.25), 0],
+		      [d, e, f,  tex, (1,0,0, 0, 0.25,  0,-1, 0, 0, 0.25), 0],
+		      [a, g, d,  tex, (0,1,0, 0, 0.25,  0, 0,-1, 0, 0.25), 0],
+		      [f, e, c,  tex, (0,1,0, 0, 0.25,  0, 0,-1, 0, 0.25), 0],
+		      [b, a, h,  tex, (1,0,0, 0, 0.25,  0, 0,-1, 0, 0.25), 0],
+		      [e, d, g,  tex, (1,0,0, 0, 0.25,  0, 0,-1, 0, 0.25), 0]]
 
-		for (sidenum,side) in enumerate(ls):
-			side.insert(0,self.num)
+		sidenum = 0
+		for a,b,c,tex,deffit,rot in ls:
+			plane = (a.x,a.y,a.z, b.x,b.y,b.z, c.x,c.y,c.z, tex)
+			if autofit: deffit = texfit(a,b,c,tex)
+			side = (self.num,) + plane + deffit + (rot,)
 			self.num += 1
-			self.f.write( self.side_tpl % tuple(side) )
 
-			if( displacement and displacement.sidenum==sidenum ):
+			self.f.write( self.side_tpl % side )
+
+			if displacement and displacement.sidenum==sidenum:
 				self.displace(displacement,side[1],side[8],side[9])
 
-			self.f.write(self.side_end)
+			self.f.write( self.side_end )
+			sidenum += 1
 		self.end_solid()
 
 	# output a solid pyramid
@@ -219,8 +231,7 @@ cordons
 		self.num += 1
 
 	def light_environment(self,z,y,x):
-		data = """
-entity
+		data = """entity
 {
 	"id" "%d"
 	"classname" "light_environment"
@@ -240,8 +251,7 @@ entity
 		self.num += 1
 
 	def info_survivor_position(self,z,y,x):
-		data = """
-entity
+		data = """entity
 {
 	"id" "%d"
 	"classname" "info_survivor_position"
@@ -254,8 +264,7 @@ entity
 		self.num += 1
 
 	def info_player_start(self,z,y,x):
-		data = """
-entity
+		data = """entity
 {
 	"id" "%d"
 	"classname" "info_player_start"
@@ -265,6 +274,15 @@ entity
 }
 """
 		self.f.write(data % (self.num,x,y,z))
+		self.num += 1
+
+	def func_detail(self):
+		data = """entity
+{
+	"id" "%d"
+	"classname" "func_detail"
+"""
+		self.f.write(data % self.num)
 		self.num += 1
 
 # vim: ts=8 sw=8 noet

@@ -84,4 +84,7 @@ def maketerrain(ydivs, xdivs, size):
 
 	return matrix
 
+def lowest(matrix,y,x):
+	return matrix[0,y,x]
+
 # vim: ts=8 sw=8 noet
