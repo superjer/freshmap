@@ -59,29 +59,24 @@ if js.version >= 5:
   if js.version > 11:
     js.has_unnamed_areas = B()
 
-js.custom_str = ""
+js.custompre_str = ""
 while 1:
   char = fin.read(1)
   if char == chr(0):
     break
-  js.custom_str += char
+  js.custompre_str += char
 
-js.custom_short = H()
+js.custompre_short = H()
 area_cnt = I()
 assert area_cnt < 100000, "area_cnt is too big: %r" % area_cnt
 js.areas = []
 
-print 'area_cnt:', area_cnt
-
-next_area = 1
+#print 'area_cnt:', area_cnt
 
 for i in range(area_cnt):
   area = nuthin()
 
   area.id =  I()
-  if area.id != next_area:
-    print "area.id (%d) != next_area (%d)" % (area.id, next_area)
-  next_area = max(area.id, next_area) + 1
 
   if aflags_sz == 1:
     area.flags = B()
@@ -182,41 +177,50 @@ for i in range(area_cnt):
       })
     area.inherit_vis_from = I()
 
-  print "End of known area - fin.tell():", fin.tell()
+  # end of documented area data
+  # start of L4D2-specific stuff?
 
-  # let's attempt to suss out the start of the next area :/
-  seekto = fin.tell()
-  area.xtra = []
-  readahead = 4 + aflags_sz + 12
-  for j in range(readahead):
-    area.xtra.append( B() )
+  #print "End of known area - fin.tell():", fin.tell()
 
-  while 1:
-    possible_next = area.xtra[-readahead]
-    should_be_zeros = area.xtra[-readahead+1:-readahead+4]
-    zeros_ok = (should_be_zeros == [ 0, 0, 0 ])
-    fx = unpack( 'f', pack( 'BBBB', area.xtra[-12], area.xtra[-11], area.xtra[-10], area.xtra[-9] ) )[0]
-    fy = unpack( 'f', pack( 'BBBB', area.xtra[ -8], area.xtra[ -7], area.xtra[ -6], area.xtra[-5] ) )[0]
-    fz = unpack( 'f', pack( 'BBBB', area.xtra[ -4], area.xtra[ -3], area.xtra[ -2], area.xtra[-1] ) )[0]
-    if zeros_ok:
-      print "IDOK (%d) for (%d) -- floats: %f %f %f" % (possible_next, next_area, fx, fy, fz)
-    if zeros_ok and goodfloat(fx) and goodfloat(fy) and goodfloat(fz):
-      break
-    try:
-      area.xtra.append( B() )
-    except:
-      break
-    seekto += 1
+  area.mystery = {}
+  area.mystery['flags'] = H()
+  area.mystery['poodle'] = I()
+  mystery_cnt = I()
+  area.mystery['cheesecake'] = I()
+  area.mystery['scallywags'] = []
 
-  if i != area_cnt - 1:
-    del area.xtra[-readahead:]
-    fin.seek(seekto)
-
-  print "======= Area read ======="
-  print area.__dict__
-  print ''
+  for j in range(mystery_cnt):
+    area.mystery['scallywags'].append({
+      'byte': B(),
+      'int' : I()
+    })
 
   js.areas.append(area.__dict__)
+
+
+if js.version >= 6 and False:
+  ladder_cnt = I()
+  js.ladders = []
+  for i in range(ladder_cnt):
+    js.ladders[i] = {
+      'id'      : I(),
+      'width'   : f(),
+      'top'     : unpack( 'fff', fin.read(12) ),
+      'bottom'  : unpack( 'fff', fin.read(12) ),
+      'length'  : f(),
+      'direc'   : ['north','east','south','west'][I()],
+      'dangling': I() if js.version == 6 else 0,
+      'connects': [ I(), I(), I(), I(), I() ]
+    }
+
+js.custom_bytes = []
+try:
+  while 1:
+    js.custom_bytes.append( B() )
+except:
+  pass
+
+fin.close()
 
 print json.dumps( js.__dict__, sort_keys=True, indent=4 )
 
