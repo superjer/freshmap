@@ -533,7 +533,7 @@ function new_item($n,$name,$w,$h) {
   $y0 = intval($r[y0]+$w/2);
   $y1 = intval($r[y1]-$w/2);
   if( $x0>$x1 || $y0>$y1 )
-    {$widthfail++; $return;}
+    {$widthfail++; return;}
   $x = mt_rand($x0,$x1);
   $y = mt_rand($y0,$y1);
   $z = $r[z0];
