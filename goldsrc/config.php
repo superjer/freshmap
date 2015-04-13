@@ -26,8 +26,4 @@ $weap_fr = array(       5 ,            3 ,                10 ,               3 ,
 $ammo = array('ammo_357','ammo_9mmclip','ammo_9mmAR','ammo_crossbow','ammo_gaussclip','ammo_rpgclip','ammo_buckshot','weapon_handgrenade','weapon_satchel','weapon_tripmine','item_healthkit','item_battery');
 $ammo_fr = array(    20 ,           20 ,          4 ,             4 ,              5 ,            2 ,             8 ,                  7 ,              3 ,               4 ,              2 ,            1 );
 
-//$seed = 'random';
-$seed = intval(hexdec('48670c8c'));
-
-
-?>
+$seed = 'random';
