@@ -26,7 +26,4 @@ $serverscreen = 'hlserver';
 # shell_execs
 # Commands to run after the compile in the default shell, in the zhlt directory
 $shell_cmds = array();
-$shell_cmds[] = "rm -f $fresh_*";
-
-
-?>
+$shell_cmds[] = "rm -f fresh_*";
